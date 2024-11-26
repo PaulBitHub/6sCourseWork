@@ -285,6 +285,9 @@ class MailingToggleActiveView(AuthLogin, PermissionResponseMixin, View):
 
     def post(self, request, pk):
         mailing = get_object_or_404(Mailing, pk=pk)
+        if mailing.owner != request.user:
+            return JsonResponse({"success": False, "error": "Permission denied."}, status=403)
+
         data = json.loads(request.body)
         mailing.is_active = data["is_active"]
         mailing.save()
