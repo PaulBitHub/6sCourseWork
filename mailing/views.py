@@ -247,6 +247,12 @@ class MailingUpdateView(AuthLogin, PermissionResponseMixin, UpdateView):
     form_class = MailingForm
     permission_required = "mailing.change_message"
 
+    def dispatch(self, request, *args, **kwargs):
+        mailing = self.get_object()
+        if mailing.owner != request.user:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Редактирование рассылки"
