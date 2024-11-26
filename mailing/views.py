@@ -273,6 +273,12 @@ class MailingDeleteView(AuthLogin, PermissionResponseMixin, DeleteView):
     success_url = reverse_lazy("mailing:mailing_list")
     permission_required = "mailing.delete_message"
 
+    def dispatch(self, request, *args, **kwargs):
+        mailing = self.get_object()
+        if mailing.owner != request.user:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
 
 class MailingToggleActiveView(AuthLogin, PermissionResponseMixin, View):
     permission_required = "mailing.disable_mailing"
