@@ -247,6 +247,12 @@ class MailingUpdateView(AuthLogin, PermissionResponseMixin, UpdateView):
     form_class = MailingForm
     permission_required = "mailing.change_message"
 
+    def dispatch(self, request, *args, **kwargs):
+        mailing = self.get_object()
+        if mailing.owner != request.user:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Редактирование рассылки"
@@ -267,12 +273,21 @@ class MailingDeleteView(AuthLogin, PermissionResponseMixin, DeleteView):
     success_url = reverse_lazy("mailing:mailing_list")
     permission_required = "mailing.delete_message"
 
+    def dispatch(self, request, *args, **kwargs):
+        mailing = self.get_object()
+        if mailing.owner != request.user:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
 
 class MailingToggleActiveView(AuthLogin, PermissionResponseMixin, View):
     permission_required = "mailing.disable_mailing"
 
     def post(self, request, pk):
         mailing = get_object_or_404(Mailing, pk=pk)
+        if mailing.owner != request.user:
+            return JsonResponse({"success": False, "error": "Permission denied."}, status=403)
+
         data = json.loads(request.body)
         mailing.is_active = data["is_active"]
         mailing.save()
